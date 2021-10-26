@@ -57,7 +57,7 @@ module.exports = {
 
             return { user, token: access_token }
         },
-        addFakeUsers: async (parent, {count}, {db}) => {
+        addFakeUsers: async (parent, { count }, { db }) => {
             let { results } = await fetch(`https://randomuser.me/api/?results=${count}`)
                 .then(res => res.json())
 
