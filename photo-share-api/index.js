@@ -1,8 +1,8 @@
 require('dotenv').config()
 const { MongoClient } = require('mongodb')
 const express = require('express')
-// const { ApolloServer } = require('apollo-server')
-const { ApolloServer } = require('apollo-server-express')
+const { createServer } = require('http')
+const { ApolloServer, PubSub } = require('apollo-server-express')
 const { readFileSync } = require('fs')
 const typeDefs = readFileSync('./typeDefs.graphql', 'UTF-8');
 const expressPlayground = require('graphql-playground-middleware-express').default
@@ -17,14 +17,14 @@ async function start() {
     )
 
     const db = client.db()
-
+    const pubsub = new PubSub()
     const server = new ApolloServer({
         typeDefs,
         resolvers,
-        context: async ({ req }) => {
-            const githubToken = req.headers.authorization
+        context: async ({ req, connection }) => {
+            const githubToken = req ? req.headers.authorization : connection.context.Authorization
             const currentUser = await db.collection('users').findOne({ githubToken })
-            return { db, currentUser }
+            return { db, currentUser, pubsub }
         }
     })
 
@@ -34,7 +34,12 @@ async function start() {
 
     app.get('/playground', expressPlayground({ endpoint: '/graphql' }))
 
-    app.listen({ port: 4000 }, () => console.log(`GraphQL Server running at http://localhost:4000${server.graphqlPath}`))
+    const httpServer = createServer(app)
+
+    // this variant is only for outdated appollo-server-express version 2
+    server.installSubscriptionHandlers(httpServer)
+
+    httpServer.listen({ port: 4000 }, () => console.log(`GraphQL Server running at http://localhost:4000${server.graphqlPath}`))
 }
 
 start();
