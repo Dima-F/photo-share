@@ -51,16 +51,15 @@ module.exports = {
                 avatar: avatar_url
             }
             
-            await db
+            const { ops:[user], result } = await db
                 .collection('users')
                 .replaceOne({ githubLogin: login }, latestUserInfo, { upsert: true })
 
-            const user = await db.collection('users').findOne({ githubLogin: login }, latestUserInfo)
-
+            result.upserted && pubsub.publish('user-added', { newUser: user })
 
             return { user, token: access_token }
         },
-        addFakeUsers: async (parent, { count }, { db }) => {
+        addFakeUsers: async (parent, { count }, { db, pubsub }) => {
             let { results } = await fetch(`https://randomuser.me/api/?results=${count}`)
                 .then(res => res.json())
 
@@ -72,6 +71,14 @@ module.exports = {
             }))
 
             await db.collection('users').insert(users)
+
+            let newUsers = await db.collection('users')
+                .find()
+                .sort({ _id: -1 })
+                .limit(count)
+                .toArray()
+        
+            newUsers.forEach(newUser => pubsub.publish('user-added', {newUser}))
 
             return users
         },
@@ -91,6 +98,9 @@ module.exports = {
     Subscription: {
         newPhoto: {
             subscribe: (parent, args, { pubsub }) => pubsub.asyncIterator('photo-added')
+        },
+        newUser: {
+            subscribe: (parent, args, { pubsub }) => pubsub.asyncIterator('user-added')
         }
     },
     Photo: {

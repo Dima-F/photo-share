@@ -1,6 +1,7 @@
 import React, { Component } from 'react'
 import { withRouter } from 'react-router-dom'
-import { Mutation, Query } from 'react-apollo'
+import { Mutation, Query, withApollo } from 'react-apollo'
+import { flowRight as compose } from 'lodash'
 import { gql } from 'apollo-boost'
 import { ROOT_QUERY } from './App'
 
@@ -55,9 +56,8 @@ class AuthorizedUser extends Component {
     }
 
     requestCode() {
-        var clientID = 'bba6b2d0f6b15a43a067'
+        const clientID = 'bba6b2d0f6b15a43a067'
         window.location = `https://github.com/login/oauth/authorize?client_id=${clientID}&scope=user`
-        debugger
     }
 
     render() {
@@ -74,7 +74,13 @@ class AuthorizedUser extends Component {
                             <Me
                                 signingIn={this.state.signingIn}
                                 requestCode={this.requestCode}
-                                logout={()=>localStorage.removeItem('token')}
+                                logout={ () => {
+                                        localStorage.removeItem('token')
+                                        let data = this.props.client.readQuery({ query: ROOT_QUERY })
+                                        data.me = null
+                                        this.props.client.writeQuery({ query: ROOT_QUERY, data })
+                                    }
+                                }
                             />
                         )
                     }
@@ -84,4 +90,4 @@ class AuthorizedUser extends Component {
     }
 }
 
-export default withRouter(AuthorizedUser)
+export default compose(withApollo, withRouter)(AuthorizedUser)
