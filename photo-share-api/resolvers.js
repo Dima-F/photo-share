@@ -1,6 +1,7 @@
 const { GraphQLScalarType } = require('graphql')
-const { authorizeWithGithub } = require('./lib.js')
+const { authorizeWithGithub, uploadStream } = require('./lib.js')
 const fetch = require('node-fetch')
+const path = require('path')
 
 module.exports = {
     Query: {
@@ -15,13 +16,21 @@ module.exports = {
             if(!currentUser) {
                 throw new Error('Not authorized!')
             }
+            
             let newPhoto = {
                 ...args.input,
                 userID: currentUser.githubLogin,
                 created: new Date()
             }
             const { insertedIds } = await db.collection('photos').insert(newPhoto)
+
             newPhoto.id = insertedIds[0]
+
+            const toPath = path.join(__dirname, 'assets', 'photos', `${photo.id}.jpg`)
+
+            const { stream } = await args.input.file
+
+            await uploadStream(stream, toPath)
             
             pubsub.publish('photo-added', { newPhoto })
 

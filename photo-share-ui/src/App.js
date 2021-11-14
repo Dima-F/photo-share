@@ -3,17 +3,22 @@ import { gql } from 'apollo-boost'
 import Users from './Users'
 import { BrowserRouter } from 'react-router-dom'
 import AuthorizedUser from './AuthorizedUser'
-import { Subscription } from '@apollo/react-components'
 import { withApollo } from 'react-apollo'
 
 export const ROOT_QUERY = gql`
   query allUsers {
     totalUsers
+    totalPhotos
     allUsers {
       ...userInfo
     }
     me {
       ...userInfo
+    }
+    allPhotos {
+      id
+      name
+      url
     }
   }
 

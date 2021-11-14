@@ -7,6 +7,7 @@ const { readFileSync } = require('fs')
 const typeDefs = readFileSync('./typeDefs.graphql', 'UTF-8');
 const expressPlayground = require('graphql-playground-middleware-express').default
 const resolvers = require('./resolvers');
+const path = require('path')
 
 async function start() {
     const app = express()
@@ -29,6 +30,8 @@ async function start() {
     })
 
     server.start().then(() => server.applyMiddleware({ app }))
+
+    app.use('/img/photos', express.static(path.join(__dirname, 'assets', 'photos')))
 
     app.get('/', (req, res) => res.end('Welcome to the PhotoShare API'))
 

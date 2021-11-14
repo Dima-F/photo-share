@@ -1,5 +1,7 @@
 scalar DateTime
 
+# scalar Upload - already in apollo
+
 enum PhotoCategory {
     SELFIE
     PORTRAIT
@@ -23,6 +25,7 @@ input PostPhotoInput {
     name: String!
     category: PhotoCategory=PORTRAIT
     description: String
+    file: Upload
 }
 
 type User {
