@@ -1,7 +1,9 @@
 import { Component, Fragment } from 'react'
 import { gql } from 'apollo-boost'
 import Users from './Users'
-import { BrowserRouter } from 'react-router-dom'
+import Photos from './Photos'
+import PostPhoto from './PostPhoto'
+import { Switch, Route, BrowserRouter } from 'react-router-dom'
 import AuthorizedUser from './AuthorizedUser'
 import { withApollo } from 'react-apollo'
 
@@ -82,20 +84,20 @@ class App extends Component {
   render() {
     return (
       <BrowserRouter>
-        <Fragment>
-          <AuthorizedUser />
-          <Users />
-          {/* <Subscription subscription={LISTEN_FOR_USERS}>
-            {
-              ({data, loading}) => loading ? 
-              <p>loading a new user...</p> :
-              <div>
-                <img src={data.newUser.avatar} alt=""/>
-                <h2>{data.newUser.name}</h2>
-              </div>
+        <Switch>
+          <Route
+            exact path="/"
+            component={()=>
+              <Fragment>
+                <AuthorizedUser/>
+                <Users/>
+                <Photos />
+              </Fragment>
             }
-          </Subscription> */}
-        </Fragment>
+          />
+          <Route path="/newPhoto" component={PostPhoto} />
+          <Route component={({ location }) => <h1>"{location.pathname}" not found</h1>} />
+        </Switch>
       </BrowserRouter>
     )
   }
